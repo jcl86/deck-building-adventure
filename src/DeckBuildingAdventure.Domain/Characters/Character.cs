@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DeckBuildingAdventure.Domain
 {
@@ -8,11 +9,111 @@ namespace DeckBuildingAdventure.Domain
         private readonly IEnumerable<Card> cards;
 
         private IEnumerable<Card> pile;
-        private IEnumerable<Card> discardPile;
+        private List<Card> discardPile;
 
-        public Deck(params Card[] cards)
+        public Deck(DeckFactory deckFactory, ShuffleService<Card> shuffleService)
         {
-            this.cards = cards;
+            cards =  shuffleService.Shuffle(deckFactory.Create().ToList());
+            pile = shuffleService.Shuffle(deckFactory.Create().ToList());
+        }
+
+        public bool CanBeTaken(int number) => pile.Count() >= number;
+        public IEnumerable<Card> DrawCards(int number)
+        {
+            if (!CanBeTaken(number))
+            {
+                throw new DomainException($"Can not take {number} cards beacause there are only {pile.Count()} cards");
+            }
+            var taken = pile.Take(number);
+            return taken;
+        }
+        public void Discard(Card card)
+        {
+            discardPile.Add(card);
+        }
+        public void Restart()
+        {
+            pile = discardPile.ToList();
+        }
+    }
+
+    public abstract class DeckFactory
+    {
+        protected IRandomGenerator randomGenerator;
+
+        public DeckFactory(IRandomGenerator randomGenerator)
+        {
+            this.randomGenerator = randomGenerator;
+        }
+
+        public abstract IEnumerable<Card> Create();
+    }
+
+    public class ThiefDeckFactory : DeckFactory
+    {
+        public ThiefDeckFactory(IRandomGenerator randomGenerator) : base(randomGenerator) { }
+
+        public override IEnumerable<Card> Create()
+        {
+            yield return new Dagger();
+            yield return new Dagger();
+            yield return new Dagger();
+            yield return new Dagger();
+            yield return new LockPick();
+            yield return new LockPick();
+            yield return new WoodenShield();
+            yield return new WoodenShield();
+        }
+    }
+
+    public class WarriorDeckFactory : DeckFactory
+    {
+        public WarriorDeckFactory(IRandomGenerator randomGenerator) : base(randomGenerator) { }
+
+        public override IEnumerable<Card> Create()
+        {
+            yield return new Sword();
+            yield return new Sword();
+            yield return new Sword();
+            yield return new IronArmour();
+            yield return new IronArmour();
+            yield return new IronArmour();
+            yield return new WoodenShield();
+            yield return new WoodenShield();
+        }
+    }
+
+    public class WizardDeckFactory : DeckFactory
+    {
+        private readonly NatureElement element;
+
+        public WizardDeckFactory(IRandomGenerator randomGenerator) : base(randomGenerator)
+        {
+            element = randomGenerator.GetElement();
+        }
+
+        public override IEnumerable<Card> Create()
+        {
+            yield return GetElementalCard();
+            yield return GetElementalCard();
+            yield return GetElementalCard();
+            yield return GetElementalCard();
+            yield return new Rod();
+            yield return new Rod();
+            yield return new Spirit();
+            yield return new Spirit();
+        }
+
+        private Card GetElementalCard()
+        {
+            switch (element)
+            {
+                case NatureElement.Fire: return new FireCard();
+                case NatureElement.Water: return new WaterCard();
+                case NatureElement.Earth: return new EarthCard();
+                case NatureElement.Wind: return new WindCard();
+            }
+            throw new NotImplementedException();
         }
     }
 

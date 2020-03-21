@@ -18,8 +18,8 @@ namespace DeckBuildingAdventure.Domain
         public Character Create()
         {
             return new Character(job,
-                strength: initialValues.InitialStrength + randomGenerator.Number(0, 2),
-                magic: initialValues.InitialMagic,
+                strength: initialValues.InitialStrength + randomGenerator.GetNumber(0, 2),
+                magic: Math.Max(0, initialValues.InitialMagic + randomGenerator.GetNumber(-2, 2)),
                 health: CalculateHealth(),
                 workPoints: initialValues.InitialWorkPoints,
                 magicPoints: CalculateMagicPoints());
@@ -27,7 +27,7 @@ namespace DeckBuildingAdventure.Domain
 
         private int CalculateHealth()
         {
-            return initialValues.InitialStrength * 2 + initialValues.InitialStrength;
+            return Math.Min(5, initialValues.InitialStrength * 2 + initialValues.InitialStrength) + randomGenerator.GetNumber(-2, 2);
         }
 
         private int CalculateMagicPoints()

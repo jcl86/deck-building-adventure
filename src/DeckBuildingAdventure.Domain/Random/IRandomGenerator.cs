@@ -1,7 +1,11 @@
-﻿namespace DeckBuildingAdventure.Domain
+﻿using System.Collections.Generic;
+
+namespace DeckBuildingAdventure.Domain
 {
     public interface IRandomGenerator
     {
-        int Number(int minimun, int maximun);
+        int GetNumber(int minimun, int maximun);
+        NatureElement GetElement();
+        T GetRandomItem<T>(IEnumerable<T> lista);
     }
 }
